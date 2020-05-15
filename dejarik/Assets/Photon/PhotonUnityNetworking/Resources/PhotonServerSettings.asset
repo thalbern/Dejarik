@@ -31,11 +31,8 @@ MonoBehaviour:
   RunInBackground: 1
   StartInOfflineMode: 0
   RpcList:
-  - ClickRpc
-  - DestroyRpc
-  - DestroySpaceship
-  - Fire
-  - RespawnSpaceship
+  - PlacePiece
+  - SelectPiece
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0

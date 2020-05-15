@@ -8,6 +8,7 @@ public class Board : MonoBehaviour
 {
     #region Properties
 
+    [Header("Sizes")]
     [SerializeField]
     [Tooltip("Radius of the inner row of pieces")]
     private float innerRowRadius = 1;
@@ -47,35 +48,6 @@ public class Board : MonoBehaviour
     private Dictionary<string, Tile> tiles;
 
     #endregion Properties
-
-    /// <summary>
-    /// Get the world-space position of a piece for the given row and sector.
-    /// </summary>
-    /// <param name="row">Row index from zero (center) to two (outer).</param>
-    /// <param name="sector">Sector index in [0:11].</param>
-    /// <returns></returns>
-    public Vector3 GetPosition(int row, int sector)
-    {
-        const float deltaAngle = (Mathf.PI * 2) / 12;
-
-        if (row == 0)
-        {
-            return transform.position;
-        }
-
-        float angle = deltaAngle * (sector + 0.5f);
-        Vector3 dir = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
-        if (row == 1)
-        {
-            return transform.position + dir * innerRowRadius;
-        }
-        if (row == 2)
-        {
-            return transform.position + dir * outerRowRadius;
-        }
-
-        throw new ArgumentException();
-    }
 
     #region MonoBehaviour Methods
 
@@ -188,6 +160,35 @@ public class Board : MonoBehaviour
 
     #region Public Methods
 
+    /// <summary>
+    /// Get the world-space position of a piece for the given row and sector.
+    /// </summary>
+    /// <param name="row">Row index from zero (center) to two (outer).</param>
+    /// <param name="sector">Sector index in [0:11].</param>
+    /// <returns></returns>
+    public Vector3 GetPosition(int row, int sector)
+    {
+        const float deltaAngle = (Mathf.PI * 2) / 12;
+
+        if (row == 0)
+        {
+            return transform.position;
+        }
+
+        float angle = deltaAngle * (sector + 0.5f);
+        Vector3 dir = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+        if (row == 1)
+        {
+            return transform.position + dir * innerRowRadius;
+        }
+        if (row == 2)
+        {
+            return transform.position + dir * outerRowRadius;
+        }
+
+        throw new ArgumentException();
+    }
+
     public HashSet<Tile> GetMovableTiles(string currentId, int movement)
     {
         HashSet<Tile> movableTiles = new HashSet<Tile>();
@@ -224,6 +225,21 @@ public class Board : MonoBehaviour
             tile.occupied = occupied;
             tiles[id] = tile;
         }
+    }
+
+    public Tile GetTile(int row, int sector)
+    {
+        string id = $"{row}{sector:X}";
+        if (tiles.ContainsKey(id))
+        {
+            return tiles[id];
+        }
+        throw new ArgumentException();
+    }
+
+    public void HighlightTile(int row, int sector)
+    {
+
     }
 
     #endregion Public Methods

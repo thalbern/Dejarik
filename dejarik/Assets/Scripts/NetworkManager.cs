@@ -20,6 +20,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
         PhotonNetwork.ConnectUsingSettings();
     }
+
     public override void OnConnectedToMaster()
     {
         Debug.Log("OnConnectedToMaster() was called by PUN.");

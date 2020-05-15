@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: a2d021ee22a74b94d8785f1a6ab488c6
+guid: 73a90a97f8c81164fa465ec0652a998d
 ModelImporter:
   serializedVersion: 23
   fileIDToRecycleName:
@@ -8,7 +8,7 @@ ModelImporter:
     2100000: No Name
     2300000: //RootNode
     3300000: //RootNode
-    4300000: 8in-20cm Dejarik Board Complete x1
+    4300000: table
   externalObjects: {}
   materials:
     importMaterials: 0

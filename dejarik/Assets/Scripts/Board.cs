@@ -48,9 +48,38 @@ public class Board : MonoBehaviour
 
     #endregion Properties
 
+    /// <summary>
+    /// Get the world-space position of a piece for the given row and sector.
+    /// </summary>
+    /// <param name="row">Row index from zero (center) to two (outer).</param>
+    /// <param name="sector">Sector index in [0:11].</param>
+    /// <returns></returns>
+    public Vector3 GetPosition(int row, int sector)
+    {
+        const float deltaAngle = (Mathf.PI * 2) / 12;
+
+        if (row == 0)
+        {
+            return transform.position;
+        }
+
+        float angle = deltaAngle * (sector + 0.5f);
+        Vector3 dir = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
+        if (row == 1)
+        {
+            return transform.position + dir * innerRowRadius;
+        }
+        if (row == 2)
+        {
+            return transform.position + dir * outerRowRadius;
+        }
+
+        throw new ArgumentException();
+    }
+
     #region MonoBehaviour Methods
 
-    void Start()
+    private void Start()
     {
         tiles = new Dictionary<string, Tile>(25);
         char getBase12Char(int x)
@@ -112,6 +141,14 @@ public class Board : MonoBehaviour
             };
             tiles.Add(outer.id, outer);
         }
+
+        // TEMP - Spawn some pieces for debugging
+        GameObject piece1 = GameObject.Instantiate(CharacterManager.instance.ghhhk, transform);
+        piece1.transform.position = GetPosition(0, 0);
+        GameObject piece2 = GameObject.Instantiate(CharacterManager.instance.kLorSlug, transform);
+        piece2.transform.position = GetPosition(1, 0);
+        GameObject piece3 = GameObject.Instantiate(CharacterManager.instance.monnok, transform);
+        piece3.transform.position = GetPosition(2, 1);
     }
 
     void Update()

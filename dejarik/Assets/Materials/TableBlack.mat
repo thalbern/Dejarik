@@ -10,7 +10,7 @@ Material:
   m_Name: TableBlack
   m_Shader: {fileID: 4800000, guid: 5bdea20278144b11916d77503ba1467a, type: 3}
   m_ShaderKeywords: _DIRECTIONAL_LIGHT _DISABLE_ALBEDO_MAP _HOVER_LIGHT _REFLECTIONS
-    _REFRACTION _SPECULAR_HIGHLIGHTS
+    _REFRACTION _RIM_LIGHT _SPECULAR_HIGHLIGHTS
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -119,7 +119,7 @@ Material:
     - _IridescenceAngle: -0.78
     - _IridescenceIntensity: 0.5
     - _IridescenceThreshold: 0.05
-    - _Metallic: 0
+    - _Metallic: 0.093
     - _Mode: 0
     - _NearLightFade: 0
     - _NearPlaneFade: 0
@@ -133,12 +133,12 @@ Material:
     - _Refraction: 1
     - _RefractiveIndex: 0
     - _RenderQueueOverride: -1
-    - _RimLight: 0
-    - _RimPower: 0.25
+    - _RimLight: 1
+    - _RimPower: 1.37
     - _RoundCornerMargin: 0.01
     - _RoundCornerRadius: 0.25
     - _RoundCorners: 0
-    - _Smoothness: 0.5
+    - _Smoothness: 0.966
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SphericalHarmonics: 0

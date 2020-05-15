@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 public class Board : MonoBehaviour
@@ -9,16 +9,24 @@ public class Board : MonoBehaviour
     #region Properties
 
     [SerializeField]
-    [Tooltip("The radius of the board in world space")]
-    private float radius = 10;
+    [Tooltip("Radius of the inner row of pieces")]
+    private float innerRowRadius = 1;
+
+    [SerializeField]
+    [Tooltip("Radius of the outer row of pieces")]
+    private float outerRowRadius = 2;
+
+    [SerializeField]
+    [Tooltip("The radius of the board")]
+    private float boundingRadius = 3;
 
     /// <summary>
     /// The radius of the board in world space
     /// </summary>
-    public float Radius
+    public float BoundingRadius
     {
-        get => radius;
-        set => radius = value;
+        get => boundingRadius;
+        set => boundingRadius = value;
     }
 
     public struct Tile
@@ -74,10 +82,10 @@ public class Board : MonoBehaviour
         {
             Vector3 dir = new Vector3(Mathf.Cos(angle * i), 0, Mathf.Sin(angle * i));
             // Middle orbit
-            Tile middle = new Tile 
-            { 
-                id = String.Format("1{0}", getBase12Char(i)), 
-                position = dir * (radius / 2),
+            Tile middle = new Tile
+            {
+                id = String.Format("1{0}", getBase12Char(i)),
+                position = dir * innerRowRadius,
                 connections = new string[]
                 {
                     String.Format("1{0}", getBase12Char(i + 1)),
@@ -92,8 +100,8 @@ public class Board : MonoBehaviour
             // Outermost orbit
             Tile outer = new Tile
             {
-                id = String.Format("2{0}",getBase12Char(i)),
-                position = dir * radius,
+                id = String.Format("2{0}", getBase12Char(i)),
+                position = dir * outerRowRadius,
                 connections = new string[]
                 {
                     String.Format("2{0}", getBase12Char(i + 1)),
@@ -106,7 +114,6 @@ public class Board : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
 #if false
@@ -120,9 +127,29 @@ public class Board : MonoBehaviour
 #endif
     }
 
-#endregion MonoBehaviour Methods
+#if UNITY_EDITOR
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, boundingRadius);
 
-#region Public Methods
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, innerRowRadius);
+        Gizmos.DrawWireSphere(transform.position, outerRowRadius);
+        float dth = 360f / 12f;
+        float th = dth / 2f;
+        for (int i = 0; i < 12; ++i)
+        {
+            Vector3 dir = Quaternion.AngleAxis(th, Vector3.up) * Vector3.right * boundingRadius;
+            Gizmos.DrawLine(transform.position, transform.position + dir);
+            th += dth;
+        }
+    }
+#endif
+
+    #endregion MonoBehaviour Methods
+
+    #region Public Methods
 
     public HashSet<Tile> GetMovableTiles(string currentId, int movement)
     {
@@ -162,5 +189,5 @@ public class Board : MonoBehaviour
         }
     }
 
-#endregion Public Methods
+    #endregion Public Methods
 }

@@ -104,7 +104,6 @@ public class Board : MonoBehaviour
             };
             tiles.Add(outer.id, outer);
         }
-        
     }
 
     // Update is called once per frame
@@ -125,11 +124,30 @@ public class Board : MonoBehaviour
 
 #region Public Methods
 
-    public List<Tile> GetMovableTiles(string currentId, int movement)
+    public HashSet<Tile> GetMovableTiles(string currentId, int movement)
     {
-        List<Tile> movableTiles = new List<Tile>();
+        HashSet<Tile> movableTiles = new HashSet<Tile>();
 
-        //TBI
+        void depthFirstSearch(string id, int remainingMovement, List<string> path)
+        {
+            path.Add(id);
+
+            if (remainingMovement <= 0)
+            {
+                movableTiles.Add(tiles[id]);
+                return;
+            }
+
+            foreach (string possibleId in tiles[id].connections)
+            {
+                if (!tiles[possibleId].occupied && !path.Contains(possibleId))
+                {
+                    depthFirstSearch(possibleId, remainingMovement - 1, new List<string>(path));
+                }
+            }
+        }
+
+        depthFirstSearch(currentId, movement, new List<string>());
 
         return movableTiles;
     }

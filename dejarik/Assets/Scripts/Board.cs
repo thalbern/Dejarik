@@ -114,13 +114,13 @@ public class Board : MonoBehaviour
             tiles.Add(outer.id, outer);
         }
 
-        // TEMP - Spawn some pieces for debugging
-        GameObject piece1 = GameObject.Instantiate(CharacterManager.instance.ghhhk, transform);
-        piece1.transform.position = GetPosition(0, 0);
-        GameObject piece2 = GameObject.Instantiate(CharacterManager.instance.kLorSlug, transform);
-        piece2.transform.position = GetPosition(1, 0);
-        GameObject piece3 = GameObject.Instantiate(CharacterManager.instance.monnok, transform);
-        piece3.transform.position = GetPosition(2, 1);
+        //// TEMP - Spawn some pieces for debugging
+        //GameObject piece1 = GameObject.Instantiate(CharacterManager.instance.ghhhk, transform);
+        //piece1.transform.position = GetPosition(0, 0);
+        //GameObject piece2 = GameObject.Instantiate(CharacterManager.instance.kLorSlug, transform);
+        //piece2.transform.position = GetPosition(1, 0);
+        //GameObject piece3 = GameObject.Instantiate(CharacterManager.instance.monnok, transform);
+        //piece3.transform.position = GetPosition(2, 1);
     }
 
     void Update()

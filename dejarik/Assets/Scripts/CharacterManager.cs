@@ -27,4 +27,39 @@ public class CharacterManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    public GameObject Instantiate(PieceType type)
+    {
+        GameObject src = null;
+        switch (type)
+        {
+        case PieceType.Ghhhk:
+            src = ghhhk;
+            break;
+        case PieceType.Grimtaash:
+            src = grimtaash;
+            break;
+        case PieceType.Houjix:
+            src = houjix;
+            break;
+        case PieceType.KintanStrider:
+            src = kintanStrider;
+            break;
+        case PieceType.KLorSlug:
+            src = kLorSlug;
+            break;
+        case PieceType.MantellianSavrip:
+            src = ghhhk;
+            break;
+        case PieceType.Monnok:
+            src = monnok;
+            break;
+        case PieceType.NgOk:
+            src = ngok;
+            break;
+        }
+
+        var dst = GameObject.Instantiate(src);
+        return dst;
+    }
 }

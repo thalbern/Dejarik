@@ -38,6 +38,7 @@ public class GameplayManager : MonoBehaviour
 
     // TODO - Make private, assign when instantiated after game start
     public Board board = null;
+    public PhotonView photonView = null;
 
     private int nextFreePieceId = 0;
     private Dictionary<int, Player> players = new Dictionary<int, Player>();
@@ -53,6 +54,17 @@ public class GameplayManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+#if DEBUG
+        DebugMenu.instance.AddAction("new Ghhhk(1,0)", () => PlacePiece(new Player { id = 42 }, PieceType.Ghhhk, 1, 0));
+#endif
+    }
+
+    private void OnEnable()
+    {
+        Debug.Assert(board != null);
+        photonView = PhotonView.Get(this);
+        Debug.Assert(photonView != null);
     }
 
     private Piece PlacePieceImpl(Player player, int pieceId, PieceType type, int row, int sector)
@@ -71,6 +83,11 @@ public class GameplayManager : MonoBehaviour
         var piece = new Piece { id = pieceId, owner = player, type = type, row = row, sector = sector };
         pieces.Add(pieceId, piece);
         board.SetTileOccupied($"{row}{sector:X}", true);
+
+        // Instantiate game object for piece
+        GameObject pieceGO = CharacterManager.instance.Instantiate(type);
+        pieceGO.transform.position = board.GetPosition(row, sector);
+
         return piece;
     }
 
@@ -124,7 +141,6 @@ public class GameplayManager : MonoBehaviour
         if (piece != null)
         {
             // Update remote player
-            PhotonView photonView = PhotonView.Get(this);
             photonView.RPC("PlacePieceRPC", RpcTarget.Others, player.id, piece.id, piece.type, piece.row, piece.sector);
         }
         return piece;
@@ -140,7 +156,6 @@ public class GameplayManager : MonoBehaviour
         SelectPieceImpl(player, piece);
 
         // Update remote player
-        PhotonView photonView = PhotonView.Get(this);
         photonView.RPC("SelectPieceRPC", RpcTarget.Others, player.id, piece.id);
     }
 }

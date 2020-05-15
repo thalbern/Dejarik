@@ -1,2 +1,2 @@
 # Dejarik
-Star Wars Holo Chess
+Holo Chess

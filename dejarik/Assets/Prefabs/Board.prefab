@@ -126,3 +126,11 @@ MonoBehaviour:
   innerRowRadius: 0.32
   outerRowRadius: 0.6
   boundingRadius: 0.76
+  tileCenter: {fileID: 2707657612274729002, guid: 0f0328f0179506d4e83c23558df82669,
+    type: 3}
+  tileInner: {fileID: 3112507868580385268, guid: 2389fce9bf161c04eaab120e3f14bbce,
+    type: 3}
+  tileOuter: {fileID: 999818702438766213, guid: ce48b8d8efe4a6e4c8f263c52733749f,
+    type: 3}
+  selectMaterial: {fileID: 2100000, guid: cfb2bebe131e7e24185681e53ff4b839, type: 2}
+  moveTargetMaterial: {fileID: 2100000, guid: d1a651fbec2f64b4c90bb91c3082c702, type: 2}

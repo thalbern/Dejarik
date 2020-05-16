@@ -20,6 +20,20 @@ public class Board : MonoBehaviour
     [Tooltip("The radius of the board")]
     private float boundingRadius = 3;
 
+    [Header("Tile meshes")]
+    [SerializeField]
+    private GameObject tileCenter = null;
+    [SerializeField]
+    private GameObject tileInner = null;
+    [SerializeField]
+    private GameObject tileOuter = null;
+
+    [Header("Highlight materials")]
+    [SerializeField]
+    private Material selectMaterial = null;
+    [SerializeField]
+    private Material moveTargetMaterial = null;
+
     /// <summary>
     /// The radius of the circle going through the center of the inner row
     /// of tiles, where the pieces are positioned.
@@ -255,7 +269,43 @@ public class Board : MonoBehaviour
 
     public void HighlightTile(TilePos position, HighlightType highlightType)
     {
+        GameObject src = null;
+        switch (position.row)
+        {
+        case 0: src = tileCenter; break;
+        case 1: src = tileInner; break;
+        case 2: src = tileOuter; break;
+        }
 
+        Transform parent = transform.Find("Mesh");
+        GameObject tileGO = GameObject.Instantiate(src, parent);
+        tileGO.transform.localPosition = Vector3.zero;
+
+        // Tile meshes already have an half-angle baked into them, so zero rotation
+        // is already at sector #0; only need to apply the target sector rotation.
+        const float deltaAngleDeg = 360f / 12f;
+        float angleDeg = deltaAngleDeg * position.sector;
+        Quaternion rotation = Quaternion.AngleAxis(angleDeg, Vector3.up);
+        tileGO.transform.localRotation = rotation;
+
+        Material mat = null;
+        string name = null;
+        switch (highlightType)
+        {
+        case HighlightType.Selection:
+            mat = selectMaterial;
+            name = "SelectedTile";
+            break;
+        case HighlightType.MoveTarget:
+            mat = moveTargetMaterial;
+            name = "MoveableTile";
+            break;
+        }
+        tileGO.GetComponent<Renderer>().material = mat;
+        tileGO.name = name;
+
+        // FIXME - Move highlight up to avoid Z-fighting (currently highlight mesh is a copy of the tile mesh)
+        tileGO.transform.localPosition = Vector3.up * 0.002f;
     }
 
     #endregion Public Methods

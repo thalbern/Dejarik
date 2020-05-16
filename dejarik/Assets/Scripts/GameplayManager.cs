@@ -111,7 +111,7 @@ public class GameplayManager : MonoBehaviour
         Debug.Assert(player == piece.owner);
         piece.IsSelected = true;
         board.HighlightTile(piece.position, Board.HighlightType.Selection);
-        HashSet<Board.Tile> moveTiles = board.GetMovableTiles(piece.position, 1 /*piece.stats.moveCount*/);
+        HashSet<Board.Tile> moveTiles = board.GetMovableTiles(piece.position, 2 /*piece.stats.moveCount*/);
         foreach (var tile in moveTiles)
         {
             board.HighlightTile(tile.position, Board.HighlightType.MoveTarget);

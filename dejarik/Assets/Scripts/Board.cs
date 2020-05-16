@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
 
 public class Board : MonoBehaviour
@@ -22,30 +21,35 @@ public class Board : MonoBehaviour
     private float boundingRadius = 3;
 
     /// <summary>
-    /// The radius of the board in world space
+    /// The radius of the circle going through the center of the inner row
+    /// of tiles, where the pieces are positioned.
     /// </summary>
-    public float BoundingRadius
-    {
-        get => boundingRadius;
-        set => boundingRadius = value;
-    }
+    public float InnerRowRadius => innerRowRadius;
 
-    public struct Tile
-    {
-        // identifier for the tile
-        public string id;
+    /// <summary>
+    /// The radius of the circle going through the center of the outer row
+    /// of tiles, where the pieces are positioned.
+    /// </summary>
+    public float OuterRowRadius => outerRowRadius;
 
-        // relative position of the tile
-        public Vector3 position;
+    /// <summary>
+    /// The bounding radius of the board at the outer side of the outer row.
+    /// </summary>
+    public float BoundingRadius => boundingRadius;
+
+    public class Tile
+    {
+        // board position of the tile
+        public TilePos position;
 
         // array of connections for this tile
-        public string[] connections;
+        public Tile[] connections;
 
         // true if the tile is occupied
         public bool occupied;
     }
 
-    private Dictionary<string, Tile> tiles;
+    private Dictionary<TilePos, Tile> tiles;
 
     #endregion Properties
 
@@ -53,65 +57,58 @@ public class Board : MonoBehaviour
 
     private void Start()
     {
-        tiles = new Dictionary<string, Tile>(25);
-        char getBase12Char(int x)
-        {
-            while (x < 0)
-            {
-                x += 12;
-            }
-            while (x >= 12)
-            {
-                x -= 12;
-            }
-            return Convert.ToString(x, 16).Last();
-        };
+        tiles = new Dictionary<TilePos, Tile>(25);
 
-        // Centre orbit
         Tile centre = new Tile
         {
-            id = "00",
-            position = Vector3.zero,
-            connections = Enumerable.Range(0, 12).Select(x => String.Format("1{0}", getBase12Char(x))).ToArray(),
+            position = TilePos.Zero,
+            connections = null,
             occupied = false
         };
-        tiles.Add(centre.id, centre);
+        tiles.Add(centre.position, centre);
 
-        // Outer orbits
-        float angle = (Mathf.PI * 2) / 12;
-        for (int i = 0; i < 12; i++)
+        Tile[] inners = new Tile[12];
+        Tile[] outers = new Tile[12];
+        for (int i = 0; i < 12; ++i)
         {
-            Vector3 dir = new Vector3(Mathf.Cos(angle * i), 0, Mathf.Sin(angle * i));
-            // Middle orbit
-            Tile middle = new Tile
+            // Inner row
+            Tile inner = new Tile
             {
-                id = String.Format("1{0}", getBase12Char(i)),
-                position = dir * innerRowRadius,
-                connections = new string[]
-                {
-                    String.Format("1{0}", getBase12Char(i + 1)),
-                    String.Format("1{0}", getBase12Char(i - 1)),
-                    String.Format("2{0}", getBase12Char(i)),
-                    "00"
-                },
+                position = new TilePos(1, i),
+                connections = null,
                 occupied = false
             };
-            tiles.Add(middle.id, middle);
+            tiles.Add(inner.position, inner);
+            inners[i] = inner;
 
-            // Outermost orbit
+            // Outer row
             Tile outer = new Tile
             {
-                id = String.Format("2{0}", getBase12Char(i)),
-                position = dir * outerRowRadius,
-                connections = new string[]
-                {
-                    String.Format("2{0}", getBase12Char(i + 1)),
-                    String.Format("2{0}", getBase12Char(i - 1)),
-                    String.Format("1{0}", getBase12Char(i))
-                },
+                position = new TilePos(2, i),
+                connections = null,
                 occupied = false
             };
-            tiles.Add(outer.id, outer);
+            tiles.Add(outer.position, outer);
+            outers[i] = outer;
+        }
+
+        centre.connections = new Tile[12];
+        for (int i = 0; i < 12; ++i)
+        {
+            centre.connections[i] = inners[i];
+        }
+        for (int i = 0; i < 12; ++i)
+        {
+            inners[i].connections = new Tile[4];
+            inners[i].connections[0] = centre;
+            inners[i].connections[1] = inners[(i + 11) % 12];
+            inners[i].connections[2] = inners[(i + 1) % 12];
+            inners[i].connections[3] = outers[i];
+
+            outers[i].connections = new Tile[3];
+            outers[i].connections[0] = outers[(i + 11) % 12];
+            outers[i].connections[1] = outers[(i + 1) % 12];
+            outers[i].connections[2] = inners[i];
         }
 
         //// TEMP - Spawn some pieces for debugging
@@ -161,27 +158,26 @@ public class Board : MonoBehaviour
     #region Public Methods
 
     /// <summary>
-    /// Get the world-space position of a piece for the given row and sector.
+    /// Get the world-space position of a piece for the given tile position on the board.
     /// </summary>
-    /// <param name="row">Row index from zero (center) to two (outer).</param>
-    /// <param name="sector">Sector index in [0:11].</param>
-    /// <returns></returns>
-    public Vector3 GetPosition(int row, int sector)
+    /// <param name="position">The tile position on the board.</param>
+    /// <returns>The world-space position of the tile center where a piece would stand.</returns>
+    public Vector3 GetPosition(TilePos position)
     {
         const float deltaAngle = (Mathf.PI * 2) / 12;
 
-        if (row == 0)
+        if (position.row == 0)
         {
             return transform.position;
         }
 
-        float angle = deltaAngle * (sector + 0.5f);
+        float angle = deltaAngle * (position.sector + 0.5f);
         Vector3 dir = new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle));
-        if (row == 1)
+        if (position.row == 1)
         {
             return transform.position + dir * innerRowRadius;
         }
-        if (row == 2)
+        if (position.row == 2)
         {
             return transform.position + dir * outerRowRadius;
         }
@@ -189,55 +185,75 @@ public class Board : MonoBehaviour
         throw new ArgumentException();
     }
 
-    public HashSet<Tile> GetMovableTiles(string currentId, int movement)
+    /// <summary>
+    /// Get the set of tiles reachable from the given starting position with the exact move count,
+    /// and which are not already occupied. Tiles reachable with less moves are not returned.
+    /// </summary>
+    /// <param name="startPos">Tile where the move starts.</param>
+    /// <param name="moveCount">Number of moves from the starting position.</param>
+    /// <returns>The set of non-occupied tiles reachable from the starting position.</returns>
+    public HashSet<Tile> GetMovableTiles(TilePos startPos, int moveCount)
     {
         HashSet<Tile> movableTiles = new HashSet<Tile>();
 
-        void depthFirstSearch(string id, int remainingMovement, List<string> path)
+        void depthFirstSearch(TilePos curPos, int remainingMovement, List<TilePos> path)
         {
-            path.Add(id);
+            path.Add(curPos);
 
             if (remainingMovement <= 0)
             {
-                movableTiles.Add(tiles[id]);
+                movableTiles.Add(tiles[curPos]);
                 return;
             }
 
-            foreach (string possibleId in tiles[id].connections)
+            foreach (Tile tile in tiles[curPos].connections)
             {
-                if (!tiles[possibleId].occupied && !path.Contains(possibleId))
+                if (!tile.occupied && !path.Contains(tile.position))
                 {
-                    depthFirstSearch(possibleId, remainingMovement - 1, new List<string>(path));
+                    depthFirstSearch(tile.position, remainingMovement - 1, new List<TilePos>(path));
                 }
             }
         }
 
-        depthFirstSearch(currentId, movement, new List<string>());
+        depthFirstSearch(startPos, moveCount, new List<TilePos>());
 
         return movableTiles;
     }
 
-    public void SetTileOccupied(string id, bool occupied)
+    /// <summary>
+    /// Retrieve a tile by position and set its occupied state.
+    /// </summary>
+    /// <param name="position">The tile position.</param>
+    /// <param name="occupied">The occupied state to set.</param>
+    public void SetTileOccupied(TilePos position, bool occupied)
     {
-        if (tiles.ContainsKey(id))
+        if (tiles.TryGetValue(position, out Tile tile))
         {
-            Tile tile = tiles[id];
             tile.occupied = occupied;
-            tiles[id] = tile;
         }
     }
 
-    public Tile GetTile(int row, int sector)
+    /// <summary>
+    /// Lookup a tile by position.
+    /// </summary>
+    /// <param name="position">Board position of the tile to find.</param>
+    /// <returns>The tile corresponding to the given position.</returns>
+    public Tile GetTile(TilePos position)
     {
-        string id = $"{row}{sector:X}";
-        if (tiles.ContainsKey(id))
+        if (tiles.TryGetValue(position, out Tile tile))
         {
-            return tiles[id];
+            return tile;
         }
         throw new ArgumentException();
     }
 
-    public void HighlightTile(int row, int sector)
+    public enum HighlightType
+    {
+        Selection,
+        MoveTarget
+    }
+
+    public void HighlightTile(TilePos position, HighlightType highlightType)
     {
 
     }

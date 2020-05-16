@@ -1,5 +1,6 @@
 ﻿
 using System.Collections.Generic;
+using System.Linq;
 using Photon.Pun;
 using UnityEngine;
 
@@ -19,16 +20,20 @@ public class Player
 {
     // TODO - make private
     public int id;
+    public string name;
 }
 
+/// <summary>
+/// A chess piece on the board.
+/// </summary>
 public class Piece
 {
     // TODO - make private
     public int id;
     public Player owner;
     public PieceType type;
-    public int row;
-    public int sector;
+    public GameObject gameObject;
+    public TilePos position;
     public bool IsSelected = false;
 }
 
@@ -56,7 +61,8 @@ public class GameplayManager : MonoBehaviour
         }
 
 #if DEBUG
-        DebugMenu.instance.AddAction("new Ghhhk(1,0)", () => PlacePiece(new Player { id = 42 }, PieceType.Ghhhk, 1, 0));
+        DebugMenu.instance.AddAction("new Ghhhk(1,0)", () => PlacePiece(players.First().Value, PieceType.Ghhhk, new TilePos(1, 0)));
+        DebugMenu.instance.AddAction("select(1,0)", () => SelectPiece(players.First().Value, GetPiece(new TilePos(1, 0))));
 #endif
     }
 
@@ -67,9 +73,17 @@ public class GameplayManager : MonoBehaviour
         Debug.Assert(photonView != null);
     }
 
-    private Piece PlacePieceImpl(Player player, int pieceId, PieceType type, int row, int sector)
+    public Player AddPlayer(string name)
     {
-        Board.Tile tile = board.GetTile(row, sector);
+        var player = new Player { id = 42, name = name };
+        players.Add(player.id, player);
+        Debug.Log($"Added player: #{player.id} = {player.name}");
+        return player;
+    }
+
+    private Piece PlacePieceImpl(Player player, int pieceId, PieceType type, TilePos position)
+    {
+        Board.Tile tile = board.GetTile(position);
         if (tile.occupied)
         {
             return null;
@@ -80,13 +94,14 @@ public class GameplayManager : MonoBehaviour
             // FIXME - This doesn't work; both players will have a different counter
             pieceId = nextFreePieceId++;
         }
-        var piece = new Piece { id = pieceId, owner = player, type = type, row = row, sector = sector };
+        var piece = new Piece { id = pieceId, owner = player, type = type, position = position };
         pieces.Add(pieceId, piece);
-        board.SetTileOccupied($"{row}{sector:X}", true);
+        board.SetTileOccupied(position, true);
 
         // Instantiate game object for piece
         GameObject pieceGO = CharacterManager.instance.Instantiate(type);
-        pieceGO.transform.position = board.GetPosition(row, sector);
+        pieceGO.transform.position = board.GetPosition(position);
+        piece.gameObject = pieceGO;
 
         return piece;
     }
@@ -95,7 +110,12 @@ public class GameplayManager : MonoBehaviour
     {
         Debug.Assert(player == piece.owner);
         piece.IsSelected = true;
-        board.HighlightTile(piece.row, piece.sector);
+        board.HighlightTile(piece.position, Board.HighlightType.Selection);
+        HashSet<Board.Tile> moveTiles = board.GetMovableTiles(piece.position, 1 /*piece.stats.moveCount*/);
+        foreach (var tile in moveTiles)
+        {
+            board.HighlightTile(tile.position, Board.HighlightType.MoveTarget);
+        }
     }
 
     [PunRPC]
@@ -107,7 +127,7 @@ public class GameplayManager : MonoBehaviour
             Debug.LogError($"Unknown player ID {playerId}.");
             return;
         }
-        PlacePieceImpl(player, pieceId, type, row, sector);
+        PlacePieceImpl(player, pieceId, type, new TilePos(row, sector));
     }
 
     [PunRPC]
@@ -132,16 +152,15 @@ public class GameplayManager : MonoBehaviour
     /// </summary>
     /// <param name="player">The player owning the piece</param>
     /// <param name="type">The type of piece to place</param>
-    /// <param name="row">The row where to place the piece</param>
-    /// <param name="sector">The sector where to place the piece</param>
+    /// <param name="position">The tile position where to place the piece</param>
     /// <returns>The newly created piece.</returns>
-    public Piece PlacePiece(Player player, PieceType type, int row, int sector)
+    public Piece PlacePiece(Player player, PieceType type, TilePos position)
     {
-        Piece piece = PlacePieceImpl(player, -1, type, row, sector);
+        Piece piece = PlacePieceImpl(player, -1, type, position);
         if (piece != null)
         {
             // Update remote player
-            photonView.RPC("PlacePieceRPC", RpcTarget.Others, player.id, piece.id, piece.type, piece.row, piece.sector);
+            photonView.RPC("PlacePieceRPC", RpcTarget.Others, player.id, piece.id, piece.type, piece.position.row, piece.position.sector);
         }
         return piece;
     }
@@ -157,5 +176,17 @@ public class GameplayManager : MonoBehaviour
 
         // Update remote player
         photonView.RPC("SelectPieceRPC", RpcTarget.Others, player.id, piece.id);
+    }
+
+    public Piece GetPiece(TilePos tilePos)
+    {
+        foreach (var piece in pieces)
+        {
+            if (piece.Value.position == tilePos)
+            {
+                return piece.Value;
+            }
+        }
+        return null;
     }
 }

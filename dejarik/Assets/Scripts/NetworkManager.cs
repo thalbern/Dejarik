@@ -28,6 +28,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         Debug.Log("OnConnectedToMaster() was called by PUN.");
 
         PhotonNetwork.LocalPlayer.NickName = PlayerName;
+        GameplayManager.instance.AddPlayer(PlayerName);
 
         var roomOptions = new RoomOptions();
         roomOptions.IsVisible = true;
@@ -50,5 +51,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
         Debug.LogError($"Failed to join room (#{returnCode}): {message}");
+    }
+
+    public override void OnPlayerEnteredRoom(Photon.Realtime.Player newPlayer)
+    {
+        GameplayManager.instance.AddPlayer(newPlayer.NickName);
     }
 }

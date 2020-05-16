@@ -61,6 +61,10 @@ public class Board : MonoBehaviour
 
         // true if the tile is occupied
         public bool occupied;
+
+        // Game object used to display some highlight on the tile.
+        // This is null when the tile is not highlighted.
+        public GameObject highlightGO = null;
     }
 
     private Dictionary<TilePos, Tile> tiles;
@@ -267,27 +271,44 @@ public class Board : MonoBehaviour
         MoveTarget
     }
 
+    /// <summary>
+    /// Highlight the tile at the given position.
+    /// </summary>
+    /// <param name="position">Tile position.</param>
+    /// <param name="highlightType">Type of highlight.</param>
     public void HighlightTile(TilePos position, HighlightType highlightType)
     {
-        GameObject src = null;
-        switch (position.row)
+        Tile tile = GetTile(position);
+
+        // Create highlight mesh if needed
+        if (tile.highlightGO == null)
         {
-        case 0: src = tileCenter; break;
-        case 1: src = tileInner; break;
-        case 2: src = tileOuter; break;
+            GameObject src = null;
+            switch (position.row)
+            {
+            case 0: src = tileCenter; break;
+            case 1: src = tileInner; break;
+            case 2: src = tileOuter; break;
+            }
+
+            Transform parent = transform.Find("Mesh");
+            GameObject tileGO = GameObject.Instantiate(src, parent);
+            tileGO.transform.localPosition = Vector3.zero;
+
+            // Tile meshes already have an half-angle baked into them, so zero rotation
+            // is already at sector #0; only need to apply the target sector rotation.
+            const float deltaAngleDeg = 360f / 12f;
+            float angleDeg = deltaAngleDeg * position.sector;
+            Quaternion rotation = Quaternion.AngleAxis(angleDeg, Vector3.up);
+            tileGO.transform.localRotation = rotation;
+
+            // FIXME - Move highlight up to avoid Z-fighting (currently highlight mesh is a copy of the tile mesh)
+            tileGO.transform.localPosition = Vector3.up * 0.002f;
+
+            tile.highlightGO = tileGO;
         }
-
-        Transform parent = transform.Find("Mesh");
-        GameObject tileGO = GameObject.Instantiate(src, parent);
-        tileGO.transform.localPosition = Vector3.zero;
-
-        // Tile meshes already have an half-angle baked into them, so zero rotation
-        // is already at sector #0; only need to apply the target sector rotation.
-        const float deltaAngleDeg = 360f / 12f;
-        float angleDeg = deltaAngleDeg * position.sector;
-        Quaternion rotation = Quaternion.AngleAxis(angleDeg, Vector3.up);
-        tileGO.transform.localRotation = rotation;
-
+        
+        // Set material for highlight type
         Material mat = null;
         string name = null;
         switch (highlightType)
@@ -301,11 +322,8 @@ public class Board : MonoBehaviour
             name = "MoveableTile";
             break;
         }
-        tileGO.GetComponent<Renderer>().material = mat;
-        tileGO.name = name;
-
-        // FIXME - Move highlight up to avoid Z-fighting (currently highlight mesh is a copy of the tile mesh)
-        tileGO.transform.localPosition = Vector3.up * 0.002f;
+        tile.highlightGO.GetComponent<Renderer>().material = mat;
+        tile.highlightGO.name = name;
     }
 
     #endregion Public Methods

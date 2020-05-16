@@ -62,7 +62,11 @@ public class GameplayManager : MonoBehaviour
 
 #if DEBUG
         DebugMenu.instance.AddAction("new Ghhhk(1,0)", () => PlacePiece(players.First().Value, PieceType.Ghhhk, new TilePos(1, 0)));
+        DebugMenu.instance.AddAction("new Ghhhk(2,0)", () => PlacePiece(players.First().Value, PieceType.Ghhhk, new TilePos(2, 0)));
+        DebugMenu.instance.AddAction("new Ghhhk(2,6)", () => PlacePiece(players.First().Value, PieceType.Ghhhk, new TilePos(2, 6)));
         DebugMenu.instance.AddAction("select(1,0)", () => SelectPiece(players.First().Value, GetPiece(new TilePos(1, 0))));
+        DebugMenu.instance.AddAction("select(2,0)", () => SelectPiece(players.First().Value, GetPiece(new TilePos(2, 0))));
+        DebugMenu.instance.AddAction("select(2,6)", () => SelectPiece(players.First().Value, GetPiece(new TilePos(2, 6))));
 #endif
     }
 

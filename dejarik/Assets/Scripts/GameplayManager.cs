@@ -72,9 +72,9 @@ public class GameplayManager : MonoBehaviour
 
     private void OnEnable()
     {
-        Debug.Assert(board != null);
+        Debug.Assert(board != null, "GameplayManager.Board is NULL");
         photonView = PhotonView.Get(this);
-        Debug.Assert(photonView != null);
+        Debug.Assert(photonView != null, "GameplayManager is missing a PhotonView component");
     }
 
     public Player AddPlayer(string name)
